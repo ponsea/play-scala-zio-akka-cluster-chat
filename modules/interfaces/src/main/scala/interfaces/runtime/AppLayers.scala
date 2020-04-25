@@ -2,68 +2,94 @@ package interfaces.runtime
 
 import domain.aggregates.comment.CommentFactory
 import domain.services.ConversationUpdateSubscriber
-import domain.utils.{ CurrentDateTime, IdGenerator, Logger }
 import domain.usecases.{ SendCommentUseCase, WatchConversationUpdatesUseCase }
+import domain.utils.{ CurrentDateTime, IdGenerator, Logger }
 import interfaces.controllers.actions.{ AuthAction, LoggingAction }
 import interfaces.controllers.{ ConversationController, ErrorHandler, SendCommentController }
-import interfaces.persistence.inmemory.CommentRepositoryImplInMemory
-import interfaces.pubsub.DomainEventBusImplByAkka
+import interfaces.persistence.slick.tables.CommentsTable
+import interfaces.persistence.slick.{ CommentRepositoryBySlick, DBIORunner, DatabasePair }
+import interfaces.pubsub.DomainEventBusByAkka
 import play.api.BuiltInComponents
-import zio.ZEnv
+import play.api.db.slick.{ DbName, SlickApi, SlickComponents }
+import slick.jdbc.JdbcProfile
 import zio.logging.slf4j.Slf4jLogger
+import zio.{ ZEnv, ZLayer }
 
 class AppLayers(
-  playComponents: BuiltInComponents
+  playComponents: BuiltInComponents with SlickComponents
   // if need..
   // with ClusterShardingComponents
-  // with SlickComponents
 ) {
-  val controllerComponents = PlayLayerProvider.getControllerComponents(playComponents)
-  val akka                 = PlayLayerProvider.getAkka(playComponents)
-  // if need..
-  // val akkaTyped            = PlayLayerProvider.getAkkaTyped(playComponents)
-  // val clusterSharding      = PlayLayerProvider.getClusterSharding(playComponents)
-  // val i18n                 = PlayLayerProvider.getI18n(playComponents)
-  // val slick                = PlayLayerProvider.getSlick(playComponents)
+  def playBasics = {
+    PlayLayerProvider.getControllerComponents(playComponents) ++
+    PlayLayerProvider.getAkka(playComponents) ++
+    PlayLayerProvider.getSlick(playComponents)
+    // if need..
+    // PlayLayerProvider.getAkkaTyped(playComponents)
+    // PlayLayerProvider.getClusterSharding(playComponents)
+    // PlayLayerProvider.getI18n(playComponents)
+  }
 
-  val logger = Slf4jLogger.make((_, message) => message) >>> Logger.layer
+  def slickBasicsOfSampleDb = {
+    val masterDbName   = DbName("sample-master")
+    val readonlyDbName = DbName("sample-readonly")
+    val jdbcProfile = playBasics >>> ZLayer.fromService[SlickApi, JdbcProfile] { slickApi =>
+      slickApi.dbConfig[JdbcProfile](masterDbName).profile
+    }
+    val tables = jdbcProfile >>> {
+      CommentsTable.layer
+    }
+    val dbioRunner = playBasics >>> ZLayer.fromService[SlickApi, DBIORunner] { slickApi =>
+      new DBIORunner(
+        DatabasePair(
+          master = slickApi.dbConfig[JdbcProfile](masterDbName).db,
+          readonly = slickApi.dbConfig[JdbcProfile](readonlyDbName).db
+        )
+      )
+    }
+    tables ++ dbioRunner
+  }
 
-  val currentDateTimeInstant       = ZEnv.live >>> CurrentDateTime.instantLayer
-  val domainEventBus               = (akka ++ logger) >>> DomainEventBusImplByAkka.layer
-  val conversationUpdateSubscriber = domainEventBus >>> ConversationUpdateSubscriber.layer
+  def repositories = {
+    slickBasicsOfSampleDb >>> CommentRepositoryBySlick.layer
+  }
 
-  val loggingAction = logger >>> LoggingAction.layer
+  // components in `domain.utils.*`
+  def utils = {
+    val logger                 = Slf4jLogger.make((_, message) => message) >>> Logger.layer
+    val currentDateTimeInstant = ZEnv.live >>> CurrentDateTime.instantLayer
+    val IdGeneratorUuid        = IdGenerator.uuidLayer
+    logger ++ currentDateTimeInstant ++ IdGeneratorUuid
+  }
 
-  val commentFactory = {
-    IdGenerator.uuidLayer ++
-    currentDateTimeInstant
-  } >>> CommentFactory.layer
+  def factories = utils >>> {
+    CommentFactory.layer
+  }
 
-  val sendCommentUseCaseInteractor = {
-    domainEventBus ++
-    commentFactory ++
-    CommentRepositoryImplInMemory.layer ++
-    currentDateTimeInstant
-  } >>> SendCommentUseCase.Interactor.layer
+  def domainEventBus = (playBasics ++ utils) >>> DomainEventBusByAkka.layer
 
-  val watchConversationUpdatesUseCaseInteractor = {
-    conversationUpdateSubscriber
-  } >>> WatchConversationUpdatesUseCase.Interactor.layer
+  // components in `domain.services.*`
+  def services = {
+    domainEventBus >>> ConversationUpdateSubscriber.layer
+  }
 
-  val errorHandler = logger >>> ErrorHandler.layer
+  def interactors =
+    (repositories ++ utils ++ factories ++ services ++ domainEventBus) >>> {
+      SendCommentUseCase.Interactor.layer ++
+      WatchConversationUpdatesUseCase.Interactor.layer
+    }
 
-  val sendCommentController = {
-    controllerComponents ++
-    sendCommentUseCaseInteractor ++
-    loggingAction ++
-    AuthAction.layer ++
-    errorHandler
-  } >>> SendCommentController.Provider.layer
+  def actionFunctions = utils >>> {
+    LoggingAction.layer ++
+    AuthAction.layer
+  }
 
-  val conversationControllerProvider = {
-    controllerComponents ++
-    watchConversationUpdatesUseCaseInteractor ++
-    logger ++
-    errorHandler
-  } >>> ConversationController.Provider.layer
+  private def domainComponents = utils ++ repositories ++ factories ++ services ++ domainEventBus ++ interactors
+
+  def errorHandler = utils >>> ErrorHandler.layer
+
+  def controllerProviders = (playBasics ++ actionFunctions ++ errorHandler ++ domainComponents) >>> {
+    SendCommentController.Provider.layer ++
+    ConversationController.Provider.layer
+  }
 }

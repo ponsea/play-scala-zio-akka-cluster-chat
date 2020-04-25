@@ -4,6 +4,7 @@ import controllers.AssetsComponents
 import interfaces.controllers.{ ConversationController, SendCommentController }
 import play.api.ApplicationLoader.Context
 import play.api.BuiltInComponentsFromContext
+import play.api.db.slick.SlickComponents
 import play.api.http.{ DefaultHttpErrorHandler, HtmlOrJsonHttpErrorHandler, JsonHttpErrorHandler }
 import play.filters.HttpFiltersComponents
 import router.Routes
@@ -12,8 +13,7 @@ import zio.internal.Platform
 
 class AppComponents(context: Context)
     extends BuiltInComponentsFromContext(context)
-    // with ClusterShardingComponents
-    // with SlickComponents
+    with SlickComponents
     with HttpFiltersComponents
     with AssetsComponents {
   override lazy val httpErrorHandler =
@@ -25,8 +25,7 @@ class AppComponents(context: Context)
   val layers = new AppLayers(this)
 
   val runtime = Runtime.unsafeFromLayer(
-    layers.sendCommentController ++
-    layers.conversationControllerProvider,
+    layers.controllerProviders,
     Platform.fromExecutionContext(executionContext)
   )
 
