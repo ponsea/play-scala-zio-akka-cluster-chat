@@ -6,7 +6,7 @@ import domain.{ DomainEvent, DomainEventBus }
 import zio.akka.cluster.pubsub.PubSub
 import zio.{ Has, Queue, UIO, ZLayer }
 
-class DomainEventBusImplByAkka(actorSystem: ActorSystem, logger: Logger) extends DomainEventBus {
+class DomainEventBusByAkka(actorSystem: ActorSystem, logger: Logger) extends DomainEventBus {
   val topicKey = "domain-events"
 
   private val createPubSub = PubSub.createPubSub[DomainEvent].provide(Has(actorSystem))
@@ -28,8 +28,8 @@ class DomainEventBusImplByAkka(actorSystem: ActorSystem, logger: Logger) extends
   }
 }
 
-object DomainEventBusImplByAkka {
+object DomainEventBusByAkka {
   val layer = ZLayer.fromServices[ActorSystem, Logger, DomainEventBus](
-    new DomainEventBusImplByAkka(_, _)
+    new DomainEventBusByAkka(_, _)
   )
 }
