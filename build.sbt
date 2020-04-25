@@ -11,14 +11,14 @@ lazy val domain = (project in file("modules/domain"))
   .settings(
     name := s"${baseName}_domain",
     libraryDependencies ++= Seq(
-      zio.core,
-      zio.streams,
+      ZIO.core,
+      ZIO.streams,
       zioLoggingSlf4j,
       enumeratum,
       refined,
       scalaTest   % Test,
-      zio.test    % Test,
-      zio.testSbt % Test,
+      ZIO.test    % Test,
+      ZIO.testSbt % Test,
     ),
     scalacOptions ++= Seq(
       "-Ymacro-annotations"
@@ -32,8 +32,8 @@ lazy val interfaces = (project in file("modules/interfaces"))
   .settings(
     name := s"${baseName}_interfaces",
     libraryDependencies ++= Seq(
-      zio.core,
-      zio.streams,
+      ZIO.core,
+      ZIO.streams,
       zioLoggingSlf4j,
       zioAkkaCluster,
       zioInterOpReactiveStreams,
@@ -44,12 +44,13 @@ lazy val interfaces = (project in file("modules/interfaces"))
       refined,
       scalaTest         % Test,
       scalaTestPlusPlay % Test,
-      zio.test          % Test,
-      zio.testSbt       % Test,
+      ZIO.test          % Test,
+      ZIO.testSbt       % Test,
+      h2                % Test,
     ),
     dependencyOverrides ++= Seq(
-      akka.clusterTools,
-      akka.clusterSharding
+      Akka.clusterTools,
+      Akka.clusterSharding
     ),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )

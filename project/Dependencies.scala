@@ -3,7 +3,7 @@ import sbt._
 object Dependencies {
   val scalaTest         = "org.scalatest"          %% "scalatest"          % "3.0.8"
   val scalaTestPlusPlay = "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0"
-  val zio = new {
+  object ZIO {
     val version = "1.0.0-RC18-2"
     val core    = "dev.zio" %% "zio" % version
     val streams = "dev.zio" %% "zio-streams" % version
@@ -14,7 +14,7 @@ object Dependencies {
   val zioInterOpReactiveStreams = "dev.zio"      %% "zio-interop-reactivestreams" % "1.0.3.5-RC6"
   val zioLoggingSlf4j           = "dev.zio"      %% "zio-logging-slf4j"           % "0.2.5"
   val enumeratum                = "com.beachape" %% "enumeratum"                  % "1.5.15"
-  val akka = new {
+  object Akka {
     val version         = "2.6.3"
     val actor           = "com.typesafe.akka" %% "akka-actor" % version
     val stream          = "com.typesafe.akka" %% "akka-stream" % version
@@ -26,4 +26,5 @@ object Dependencies {
   val refined            = "eu.timepit"        %% "refined"             % "0.9.13"
   val playSlick          = "com.typesafe.play" %% "play-slick"          % "5.0.0"
   val mysqlConnectorJava = "mysql"             % "mysql-connector-java" % "8.0.19"
+  val h2                 = "com.h2database"    % "h2"                   % "1.4.200"
 }
