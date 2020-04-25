@@ -39,6 +39,7 @@ lazy val interfaces = (project in file("modules/interfaces"))
       zioInterOpReactiveStreams,
       enumeratum,
       playSlick,
+      mysqlConnectorJava,
       clusterSharding,
       refined,
       scalaTest         % Test,
@@ -53,6 +54,20 @@ lazy val interfaces = (project in file("modules/interfaces"))
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .dependsOn(domain)
+
+// `flyway-<DB Name>` for each database
+lazy val `flyway-sample` = (project in file("tools/flyway/sample"))
+  .enablePlugins(FlywayPlugin)
+  .settings(
+    name := s"${baseName}_flyway",
+    libraryDependencies += mysqlConnectorJava,
+    flywayDriver := "com.mysql.cj.jdbc.Driver",
+    flywayUrl := "jdbc:mysql://localhost:3306/sample?useSSL=false",
+    flywayUser := "sample",
+    flywayPassword := "sample",
+    flywaySchemas := Seq("sample"),
+    flywayLocations := Seq(s"filesystem:${baseDirectory.value}/src/test/resources/"),
+  )
 
 lazy val root = (project in file("."))
   .settings(

@@ -23,6 +23,7 @@ object Dependencies {
     val clusterTyped    = "com.typesafe.akka" %% "akka-cluster-typed" % version
     val slf4j           = "com.typesafe.akka" %% "akka-slf4j" % version
   }
-  val refined   = "eu.timepit"        %% "refined"    % "0.9.13"
-  val playSlick = "com.typesafe.play" %% "play-slick" % "5.0.0"
+  val refined            = "eu.timepit"        %% "refined"             % "0.9.13"
+  val playSlick          = "com.typesafe.play" %% "play-slick"          % "5.0.0"
+  val mysqlConnectorJava = "mysql"             % "mysql-connector-java" % "8.0.19"
 }
