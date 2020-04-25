@@ -13,17 +13,23 @@ object CommentRepositoryMock {
 
   object Save extends Tag[Comment, Unit]
 
+  object FindById extends Tag[Comment.Id, Comment]
+
   private val envBuilder: URLayer[Has[Proxy], Has[CommentRepository]] =
     ZLayer.fromService[Proxy, CommentRepository](
       invoke =>
         new CommentRepository {
           override def save(comment: Comment): UIO[Unit] = invoke(Save, comment)
+
+          override def findById(id: Comment.Id): IO[Unit, Comment] = invoke(FindById, id)
       }
     )
 
   val noImplLayer = ZLayer.succeed(
     new CommentRepository {
       override def save(comment: Comment): UIO[Unit] = ???
+
+      override def findById(id: Comment.Id): IO[Unit, Comment] = ???
     }
   )
 }
