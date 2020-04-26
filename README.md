@@ -4,7 +4,17 @@
     $ cd docker
     $ docker-compose up -d
     ```
-2. Start Application Servers
+   MySQL server will start and `sample` database will be created.
+   
+   If you want to access the DB
+   ```
+   $ mysql -h 127.0.0.1 -usample -p # the password is `sample`
+   ```
+2. Apply table schemas in the DB
+    ``` 
+    $ sbt flyway-sample/flywayMigrate
+    ```
+3. Start Application Servers
     - Server 1 (http => localhost:9000)
     ```
     $ sbt interfaces/run
@@ -14,4 +24,4 @@
     $ sbt "interfaces/run -Dhttp.port=9001 -Dconfig.resource=application-2.conf"
     ```
   
-3. Access to `http://localhost:9000/ (or 9001)`
+4. Access to `http://localhost:9000/ (or 9001)`
