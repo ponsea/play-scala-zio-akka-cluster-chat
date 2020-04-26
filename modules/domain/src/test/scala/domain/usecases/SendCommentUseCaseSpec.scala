@@ -39,7 +39,8 @@ object SendCommentUseCaseSpec extends DefaultRunnableSpec {
           now,
           now
         )
-      val commentSentEvent = CommentEvent.Sent(comment.id, comment.authorId, comment.conversationKey, now)
+      val commentSentEvent =
+        CommentEvent.Sent(comment.id, comment.content, comment.authorId, comment.conversationKey, now)
       val mockedInteractorLayer = {
         CurrentDateTimeStub.instantLayer(now) ++
         mockedCommentFactoryLayer ++

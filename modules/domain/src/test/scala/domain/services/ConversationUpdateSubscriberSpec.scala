@@ -25,8 +25,14 @@ object ConversationUpdateSubscriberSpec extends DefaultRunnableSpec {
 
   def subscribeByConversationKeySpec = suite("subscribeByConversationKey")(
     testM("return a stream which has a buffer (size 16) dropping old") {
-      val conversationKey                   = Conversation.Key("conversation-key")
-      val commentSentEvent                  = CommentEvent.Sent(Comment.Id(uuid), UserAccount.Id("author-id"), conversationKey, now)
+      val conversationKey = Conversation.Key("conversation-key")
+      val commentSentEvent = CommentEvent.Sent(
+        Comment.Id(uuid),
+        Comment.Content("valid comment content"),
+        UserAccount.Id("author-id"),
+        conversationKey,
+        now
+      )
       val commentSentEvents17               = (1 to 17).map(i => commentSentEvent.copy(occurredAt = now.plusMillis(i)))
       val domainEventQueueM                 = Queue.unbounded[DomainEvent].tap(_.offerAll(commentSentEvents17))
       val mockedDomainEventBusLayer         = DomainEventBusMock.Subscribe returns valueM(_ => domainEventQueueM)
@@ -48,10 +54,22 @@ object ConversationUpdateSubscriberSpec extends DefaultRunnableSpec {
     testM("return a stream which doesn't contain other conversation's updates") {
       val targetConversationKey = Conversation.Key("target-conversation-key")
       val targetCommentSentEvent =
-        CommentEvent.Sent(Comment.Id(uuid), UserAccount.Id("author-id"), targetConversationKey, now)
+        CommentEvent.Sent(
+          Comment.Id(uuid),
+          Comment.Content("valid comment content"),
+          UserAccount.Id("author-id"),
+          targetConversationKey,
+          now
+        )
       val notTargetConversationKey = Conversation.Key("not-target-conversation-key")
       val notTargetCommentSentEvent =
-        CommentEvent.Sent(Comment.Id(uuid), UserAccount.Id("author-id"), notTargetConversationKey, now)
+        CommentEvent.Sent(
+          Comment.Id(uuid),
+          Comment.Content("valid comment content"),
+          UserAccount.Id("author-id"),
+          notTargetConversationKey,
+          now
+        )
       val domainEventQueueM = Queue
         .unbounded[DomainEvent].tap(
           _.offerAll(

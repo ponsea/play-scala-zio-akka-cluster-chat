@@ -15,6 +15,7 @@ sealed trait CommentEvent extends DomainEvent {
 object CommentEvent {
   case class Sent(
     commentId: Comment.Id,
+    commentContent: Comment.Content,
     authorId: UserAccount.Id,
     conversationKey: Conversation.Key,
     occurredAt: Instant

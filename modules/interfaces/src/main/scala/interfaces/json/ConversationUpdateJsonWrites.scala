@@ -2,6 +2,7 @@ package interfaces.json
 
 import domain.aggregates.comment.Comment
 import domain.aggregates.conversation.Conversation
+import domain.aggregates.useraccount.UserAccount
 import domain.services.ConversationUpdate
 import play.api.libs.json.{ JsValue, Json, Writes }
 import eu.timepit.refined.auto._
@@ -11,6 +12,8 @@ trait ConversationUpdateJsonWrites {
 
   implicit private val conversationKeyWrites                  = Writes[Conversation.Key](key => Json.toJson(key.underlying))
   implicit private val commentIdWrites                        = Writes[Comment.Id](id => Json.toJson(id.underlying))
+  implicit private val commentContentWrites                   = Writes[Comment.Content](content => Json.toJson(content.underlying))
+  implicit private val userAccountIdWrites                    = Writes[UserAccount.Id](id => Json.toJson(id.underlying))
   implicit private val conversationUpdateCommentAddedWrites   = Json.writes[CommentAdded]
   implicit private val conversationUpdateCommentUpdatedWrites = Json.writes[CommentUpdated]
   implicit private val conversationUpdateCommentDeletedWrites = Json.writes[CommentDeleted]

@@ -31,7 +31,11 @@ object SendCommentUseCase {
         _              <- commentRepository.save(createdComment)
         now            <- currentDateTime.get()
         _ <- domainEventBus.publish(
-          CommentEvent.Sent(createdComment.id, createdComment.authorId, createdComment.conversationKey, now)
+          CommentEvent.Sent(createdComment.id,
+                            createdComment.content,
+                            createdComment.authorId,
+                            createdComment.conversationKey,
+                            now)
         )
       } yield Output(createdComment)
     }
