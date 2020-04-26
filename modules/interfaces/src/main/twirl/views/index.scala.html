@@ -1,0 +1,60 @@
+@()
+
+@main("Welcome to Play") {
+  <dl style="border: solid 1px #ccc">
+    <dt>会話のID</dt><dd><input type="text" id="conversation-key" value="scala-conversation" disabled></dd>
+    <dt>コメント</dt><dd><input type="text" id="comment-content" value="Scala好き。"></dd>
+    <dt>ユーザーID</dt><dd><input type="text" id="user-id" value="user-1"></dd>
+    <button id="send-comment-button">送信</button>
+  </dl>
+  <div style="display: flex">
+    <div style="border: solid 1px #ccc; width: 50%">
+      <p>サーバー1へのコネクション(localhost:9000)</p>
+      <p>会話ID「scala-conversation」の更新情報:</p>
+      <ul id="server-1-updates">
+      </ul>
+    </div>
+    <div style="border: solid 1px #ccc; width: 50%">
+      <p>サーバー2へのコネクション(localhost:9001)</p>
+      <p>会話ID「scala-conversation」の更新情報:</p>
+      <ul id="server-2-updates">
+      </ul>
+    </div>
+  </div>
+<script>
+  window.addEventListener("DOMContentLoaded", () => {
+    const conversationKey = "scala-conversation"
+    const server1Updates = document.getElementById("server-1-updates")
+    const server2Updates = document.getElementById("server-2-updates")
+    const connectionToServer1 = new WebSocket(`ws://localhost:9000/v1/conversations/${conversationKey}/updates`);
+    const connectionToServer2 = new WebSocket(`ws://localhost:9001/v1/conversations/${conversationKey}/updates`);
+    const sendCommentButton = document.getElementById("send-comment-button")
+
+    connectionToServer1.onmessage = message => {
+      const update = document.createElement("li")
+      update.innerText = message.data
+      server1Updates.appendChild(update)
+    }
+
+    connectionToServer2.onmessage = message => {
+      const update = document.createElement("li")
+      update.innerText = message.data
+      server2Updates.appendChild(update)
+    }
+
+    sendCommentButton.onclick = () => {
+      const content = document.getElementById("comment-content").value
+      const userId = document.getElementById("user-id").value
+      fetch("/v1/comments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userId}`, // そのままここのユーザーIDで認証済みということにここではなっています。
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify({content, conversationKey})
+      })
+    }
+  });
+</script>
+}

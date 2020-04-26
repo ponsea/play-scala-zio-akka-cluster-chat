@@ -4,10 +4,9 @@
 # ~~~~
 
 # An example controller showing a domain.sample home page
+GET     /                                         interfaces.controllers.HomeController.index
 POST    /v1/comments                              interfaces.controllers.SendCommentController.invoke
 GET     /v1/conversations/:key/updates            interfaces.controllers.ConversationController.watchUpdates(key)
-# GET     /v1/ping                                  interfaces.controllers.HomeController.ping
-# GET     /v1/authed                                interfaces.controllers.HomeController.authed
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

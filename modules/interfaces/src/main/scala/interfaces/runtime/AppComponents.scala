@@ -1,7 +1,7 @@
 package interfaces.runtime
 
 import controllers.AssetsComponents
-import interfaces.controllers.{ ConversationController, SendCommentController }
+import interfaces.controllers.{ ConversationController, HomeController, SendCommentController }
 import play.api.ApplicationLoader.Context
 import play.api.BuiltInComponentsFromContext
 import play.api.db.slick.SlickComponents
@@ -31,6 +31,7 @@ class AppComponents(context: Context)
 
   val router = new Routes(
     httpErrorHandler,
+    new HomeController(controllerComponents),
     runtime.environment.get[SendCommentController.Provider].apply(runtime),
     runtime.environment.get[ConversationController.Provider].apply(runtime),
     assets
