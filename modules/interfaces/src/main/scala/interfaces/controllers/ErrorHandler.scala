@@ -9,13 +9,15 @@ import play.api.mvc.{ Result, Results }
 import zio.{ Cause, UIO, ZIO, ZLayer }
 
 class ErrorHandler(logger: Logger) extends Results with Status with DomainErrorJsonWrites {
-
   def handleErrors(cause: Cause[DomainError]): UIO[Result] = {
     for {
+      // 復帰不可能なシステムエラー(`Cause#defects`)をログ出力
       _ <- ZIO.foreach(cause.defects)(logger.throwable("Non-recoverable error occurred.", _))
-      result = (cause.failures, cause.defects) match {
+      result = (cause.failures, cause.defects) match { // ここのfailuresはList[DomainError]型
+        // failures(バリデーションエラーなど)がある場合は適切なHTTPエラーレスポンスを返す
         case (fail :: _, _) => Status(statusCodeOf(fail))(errorsToJson(cause.failures))
-        case _              => InternalServerError
+        // `defects`(復帰不可なシステムエラー)のみの場合はInternalServerエラー
+        case _ => InternalServerError
       }
     } yield result
   }
